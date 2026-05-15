@@ -5,17 +5,15 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  skipWaiting: true, // Tambahkan ini agar PWA lebih stabil
+  skipWaiting: true,
 });
 
 const nextConfig: NextConfig = {
-  // Tambahkan ini untuk memastikan folder src terbaca
+  // Hapus bagian eslint dan typescript yang lama
+  // Jika ingin mengabaikan error saat build, gunakan ini:
   typescript: {
-    ignoreBuildErrors: true, 
+    ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  }
 };
 
 export default withPWA(nextConfig);
