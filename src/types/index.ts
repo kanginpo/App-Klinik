@@ -36,6 +36,16 @@ export interface Transaction {
   appointmentId?: string;
 }
 
+export interface PatientFile {
+  id: string;
+  patientId: string;
+  name: string;
+  mimeType: string;
+  sizeBytes: number;
+  data: string; // base64
+  uploadedAt: string;
+}
+
 export interface ClinicStats {
   totalRevenue: number;
   totalCost: number;
