@@ -5,20 +5,16 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Patient, Appointment, Transaction, PatientFile } from "@/types";
 
 interface ClinicContextType {
-  // Core data
   patients: Patient[];
   setPatients: (v: Patient[]) => void;
   appointments: Appointment[];
   setAppointments: (v: Appointment[]) => void;
   transactions: Transaction[];
   setTransactions: (v: Transaction[]) => void;
-  // Files
   patientFiles: PatientFile[];
   setPatientFiles: (v: PatientFile[]) => void;
-  // Logo (base64 string or null)
   logo: string | null;
   setLogo: (v: string | null) => void;
-  // Hydration gate
   isHydrated: boolean;
 }
 
