@@ -27,18 +27,40 @@ interface InvoiceData {
 // ─── Preset layanan fisioterapi ───────────────────────────────────────────────
 
 const SERVICE_PRESETS = [
-  { label: "1 session, Senior physio On clinic", price: 200000 },
-  { label: "4 session, Senior physio On clinic", price: 800000 },
-  { label: "8 session, Senior physio On clinic", price: 1500000 },
-  { label: "1 session, Home visit physio", price: 350000 },
-  { label: "4 session, Home visit physio", price: 1300000 },
-  { label: "Konsultasi fisioterapi", price: 150000 },
-  { label: "Terapi TENS / EMS", price: 100000 },
-  { label: "Terapi ultrasound", price: 120000 },
-  { label: "Terapi laser", price: 150000 },
-  { label: "Terapi dry needling", price: 200000 },
-  { label: "Kinesio taping", price: 100000 },
-  { label: "Manual therapy", price: 250000 },
+  // ── Health Screening ─────────────────────────────────────────────
+  { label: "Health Screening Only", price: 50000 },
+
+  // ── Health Screening + Treatment (On Clinic) ─────────────────────
+  { label: "1 session – Junior Therapist (On Clinic)", price: 150000 },
+  { label: "1 session – Senior Therapist (On Clinic)", price: 250000 },
+  { label: "4 session – Senior Therapist (On Clinic)", price: 800000 },
+  { label: "8 session – Senior Therapist (On Clinic)", price: 1500000 },
+  { label: "12 session – Senior Therapist (On Clinic)", price: 2100000 },
+
+  // ── Sports Massage ───────────────────────────────────────────────
+  { label: "Sports Massage – Full Body (1 session)", price: 400000 },
+  { label: "Sports Massage – Full Body (2 session)", price: 750000 },
+  { label: "Sports Massage – Full Body (4 session)", price: 1400000 },
+  { label: "Sports Massage – Side Regional (1 session)", price: 250000 },
+  { label: "Sports Massage – Side Regional (2 session)", price: 465000 },
+  { label: "Sports Massage – Side Regional (4 session)", price: 870000 },
+
+  // ── Neuro Packages (Home Visit + Transport) ──────────────────────
+  { label: "Neuro – 1 session Junior Therapist (Home Visit)", price: 175000 },
+  { label: "Neuro – 1 session Senior Therapist (Home Visit)", price: 275000 },
+  { label: "Neuro – 4 session (Home Visit)", price: 900000 },
+  { label: "Neuro – 8 session (Home Visit)", price: 1700000 },
+
+  // ── Musculo Packages (Home Visit + Transport) ────────────────────
+  { label: "Musculo – 1 session Junior Therapist (Home Visit)", price: 160000 },
+  { label: "Musculo – 1 session Senior Therapist (Home Visit)", price: 260000 },
+  { label: "Musculo – 4 session (Home Visit)", price: 840000 },
+  { label: "Musculo – 8 session (Home Visit)", price: 1580000 },
+
+  // ── Biaya Tambahan ───────────────────────────────────────────────
+  { label: "Biaya Transport Extra (per 1-5 km > 10 km)", price: 10000 },
+
+  // ── Custom ───────────────────────────────────────────────────────
   { label: "Custom / Tulis sendiri", price: 0 },
 ];
 
@@ -83,7 +105,7 @@ const blankInvoice = (): InvoiceData => ({
   discount: 0,
   isPaid: true,
   items: [
-    { id: uid(), description: "4 session, Senior physio On clinic", price: 800000, qty: 1 },
+    { id: uid(), description: "4 session – Senior Therapist (On Clinic)", price: 800000, qty: 1 },
   ],
 });
 
