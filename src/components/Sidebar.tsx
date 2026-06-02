@@ -81,3 +81,5 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
     </aside>
   );
 };
+// Di dalam array menu navigasi
+{ href: "/invoice", label: "Invoice", icon: <FileText size={18} /> }
