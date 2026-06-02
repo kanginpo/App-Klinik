@@ -28,3 +28,5 @@ export default function RootLayout({
     </html>
   );
 }
+// Di dalam array menu navigasi
+{ href: "/invoice", label: "Invoice", icon: <FileText size={18} /> }
