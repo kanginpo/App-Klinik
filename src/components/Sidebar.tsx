@@ -1,26 +1,25 @@
 "use client";
-
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Users, Calendar, DollarSign, Settings, Activity, X,
+  LayoutDashboard, Users, Calendar, DollarSign, Settings, Activity, X, FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClinic } from "@/lib/ClinicContext";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dasbor",      href: "/" },
-  { icon: Users,           label: "Pasien",       href: "/patients" },
-  { icon: Calendar,        label: "Jadwal",        href: "/schedule" },
-  { icon: DollarSign,      label: "Keuangan",     href: "/finance" },
-  { icon: Settings,        label: "Pengaturan",   href: "/settings" },
+  { icon: LayoutDashboard, label: "Dasbor",    href: "/" },
+  { icon: Users,           label: "Pasien",     href: "/patients" },
+  { icon: Calendar,        label: "Jadwal",     href: "/schedule" },
+  { icon: DollarSign,      label: "Keuangan",   href: "/finance" },
+  { icon: FileText,        label: "Invoice",    href: "/invoice" },
+  { icon: Settings,        label: "Pengaturan", href: "/settings" },
 ];
 
 export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
   const { logo } = useClinic();
-
   return (
     <aside className="flex flex-col w-64 bg-white border-r border-gray-200 h-full">
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -52,7 +51,6 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           </button>
         )}
       </div>
-
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
@@ -72,7 +70,6 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           );
         })}
       </nav>
-
       <div className="px-3 py-4 border-t border-gray-100">
         <div className="px-3 py-2 text-xs text-gray-400">
           PhysioCare v1.0 · Data tersimpan lokal
@@ -81,5 +78,3 @@ export const Sidebar = ({ onClose }: { onClose?: () => void }) => {
     </aside>
   );
 };
-// Di dalam array menu navigasi
-{ href: "/invoice", label: "Invoice", icon: <FileText size={18} /> }
