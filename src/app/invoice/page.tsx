@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { Printer, Plus, Trash2, Upload, X, Download, Eye } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Printer, Plus, Trash2, Upload, X, Eye } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,7 +49,8 @@ const formatRp = (n: number) =>
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 
-const nextInvoiceNumber = () => {
+// Safe: only called client-side inside useEffect
+const getNextInvoiceNumber = () => {
   const stored = localStorage.getItem("klinik_invoice_counter");
   const count = stored ? parseInt(stored) + 1 : 1;
   localStorage.setItem("klinik_invoice_counter", String(count));
@@ -59,10 +60,7 @@ const nextInvoiceNumber = () => {
   return `${mm}.${yy}.${String(count).padStart(4, "0")}`;
 };
 
-const todayStr = () => {
-  const d = new Date();
-  return d.toISOString().split("T")[0];
-};
+const todayStr = () => new Date().toISOString().split("T")[0];
 
 const formatDateIndo = (iso: string) => {
   const months = [
@@ -73,10 +71,10 @@ const formatDateIndo = (iso: string) => {
   return `${parseInt(day)} ${months[parseInt(m) - 1]} ${y}`;
 };
 
-// ─── Default state ────────────────────────────────────────────────────────────
+// ─── Default state (no localStorage here!) ───────────────────────────────────
 
-const defaultInvoice = (): InvoiceData => ({
-  invoiceNumber: nextInvoiceNumber(),
+const blankInvoice = (): InvoiceData => ({
+  invoiceNumber: "",
   date: todayStr(),
   patientName: "",
   phone: "",
@@ -85,27 +83,28 @@ const defaultInvoice = (): InvoiceData => ({
   discount: 0,
   isPaid: true,
   items: [
-    {
-      id: uid(),
-      description: "4 session, Senior physio On clinic",
-      price: 800000,
-      qty: 1,
-    },
+    { id: uid(), description: "4 session, Senior physio On clinic", price: 800000, qty: 1 },
   ],
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function InvoicePage() {
-  const [invoice, setInvoice] = useState<InvoiceData>(defaultInvoice);
+  const [invoice, setInvoice] = useState<InvoiceData>(blankInvoice);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [stampUrl, setStampUrl] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [customDescIdx, setCustomDescIdx] = useState<Record<string, boolean>>({});
+  const [mounted, setMounted] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const stampInputRef = useRef<HTMLInputElement>(null);
-  const printRef = useRef<HTMLDivElement>(null);
+
+  // ── Set invoice number client-side only ─────────────────────────────────────
+  useEffect(() => {
+    setMounted(true);
+    setInvoice((p) => ({ ...p, invoiceNumber: getNextInvoiceNumber() }));
+  }, []);
 
   // ── Calculations ────────────────────────────────────────────────────────────
   const subtotal = invoice.items.reduce((s, i) => s + i.price * i.qty, 0);
@@ -115,10 +114,7 @@ export default function InvoicePage() {
   const addItem = () =>
     setInvoice((p) => ({
       ...p,
-      items: [
-        ...p.items,
-        { id: uid(), description: "", price: 0, qty: 1 },
-      ],
+      items: [...p.items, { id: uid(), description: "", price: 0, qty: 1 }],
     }));
 
   const removeItem = (id: string) =>
@@ -153,20 +149,18 @@ export default function InvoicePage() {
     []
   );
 
-  // ── Print / Save ─────────────────────────────────────────────────────────────
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   const resetForm = () => {
-    setInvoice(defaultInvoice());
+    setInvoice({ ...blankInvoice(), invoiceNumber: getNextInvoiceNumber() });
     setCustomDescIdx({});
   };
 
-  // ── Field update shorthand ───────────────────────────────────────────────────
   const set = (field: keyof InvoiceData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setInvoice((p) => ({ ...p, [field]: e.target.value }));
+
+  if (!mounted) return null; // prevent SSR mismatch
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -174,12 +168,9 @@ export default function InvoicePage() {
 
   return (
     <>
-      {/* ── Print styles injected via style tag ── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
         .invoice-page { font-family: 'Plus Jakarta Sans', sans-serif; }
-
         @media print {
           body * { visibility: hidden !important; }
           .print-area, .print-area * { visibility: visible !important; }
@@ -229,7 +220,7 @@ export default function InvoicePage() {
         <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
 
           {/* ══════════════════════════════════════════
-              LEFT – FORM INPUT (no-print)
+              LEFT – FORM INPUT
           ══════════════════════════════════════════ */}
           {!previewMode && (
             <div className="no-print space-y-5">
@@ -238,8 +229,6 @@ export default function InvoicePage() {
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h2 className="font-semibold text-gray-700 mb-4">Aset Klinik</h2>
                 <div className="grid grid-cols-2 gap-4">
-
-                  {/* Logo */}
                   <div>
                     <p className="text-xs font-medium text-gray-500 mb-2">Logo Klinik</p>
                     <div
@@ -252,9 +241,7 @@ export default function InvoicePage() {
                           <button
                             onClick={(e) => { e.stopPropagation(); setLogoUrl(null); }}
                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"
-                          >
-                            <X size={12} />
-                          </button>
+                          ><X size={12} /></button>
                         </>
                       ) : (
                         <>
@@ -267,7 +254,6 @@ export default function InvoicePage() {
                       onChange={(e) => handleImageUpload(e, setLogoUrl)} />
                   </div>
 
-                  {/* Stamp / TTD */}
                   <div>
                     <p className="text-xs font-medium text-gray-500 mb-2">Stempel / TTD</p>
                     <div
@@ -280,9 +266,7 @@ export default function InvoicePage() {
                           <button
                             onClick={(e) => { e.stopPropagation(); setStampUrl(null); }}
                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"
-                          >
-                            <X size={12} />
-                          </button>
+                          ><X size={12} /></button>
                         </>
                       ) : (
                         <>
@@ -312,7 +296,6 @@ export default function InvoicePage() {
                       value={invoice.date} onChange={set("date")} />
                   </div>
                 </div>
-
                 <div className="flex items-center gap-3">
                   <input type="checkbox" id="isPaid" className="w-4 h-4 accent-blue-600"
                     checked={invoice.isPaid}
@@ -327,7 +310,7 @@ export default function InvoicePage() {
                 <div>
                   <label className="text-xs font-medium text-gray-500">Nama Pasien</label>
                   <input className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Px. Nathanael H" value={invoice.patientName} onChange={set("patientName")} />
+                    placeholder="Px. Nama Pasien" value={invoice.patientName} onChange={set("patientName")} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-500">No. HP</label>
@@ -361,7 +344,6 @@ export default function InvoicePage() {
                       )}
                     </div>
 
-                    {/* Dropdown preset */}
                     <select
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                       onChange={(e) => {
@@ -376,7 +358,6 @@ export default function InvoicePage() {
                       ))}
                     </select>
 
-                    {/* Custom description (shown when custom selected) */}
                     {customDescIdx[item.id] && (
                       <input
                         className="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -413,7 +394,6 @@ export default function InvoicePage() {
                   <Plus size={16} /> Tambah Item
                 </button>
 
-                {/* Discount */}
                 <div>
                   <label className="text-xs font-medium text-gray-500">Diskon (Rp)</label>
                   <input type="number" min={0}
@@ -422,7 +402,6 @@ export default function InvoicePage() {
                     onChange={(e) => setInvoice((p) => ({ ...p, discount: parseFloat(e.target.value) || 0 }))} />
                 </div>
 
-                {/* Summary */}
                 <div className="mt-2 rounded-xl bg-blue-50 p-3 space-y-1">
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>Sub total</span><span>{formatRp(subtotal)}</span>
@@ -441,17 +420,16 @@ export default function InvoicePage() {
           )}
 
           {/* ══════════════════════════════════════════
-              RIGHT – INVOICE PREVIEW (print-area)
+              RIGHT – INVOICE PREVIEW
           ══════════════════════════════════════════ */}
           <div className={previewMode ? "col-span-full max-w-2xl mx-auto w-full" : ""}>
-            <div ref={printRef} className="print-area bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden"
+            <div className="print-area bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-              {/* Header band */}
+              {/* Header */}
               <div style={{ background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)" }}
                 className="px-7 pt-7 pb-5">
                 <div className="flex items-center justify-between">
-                  {/* Logo + clinic name */}
                   <div className="flex items-center gap-3">
                     {logoUrl ? (
                       <img src={logoUrl} alt="logo" className="h-12 w-12 object-contain bg-white rounded-full p-1" />
@@ -465,15 +443,11 @@ export default function InvoicePage() {
                       <p className="text-blue-200 text-xs mt-0.5">Klinik Fisioterapi Profesional</p>
                     </div>
                   </div>
-
-                  {/* Invoice Lunas badge */}
                   <div className="text-right">
                     <p className="text-white font-black text-2xl md:text-3xl tracking-widest">INVOICE LUNAS</p>
                     <p className="text-blue-200 text-xs mt-1">#{invoice.invoiceNumber}</p>
                   </div>
                 </div>
-
-                {/* Meta row */}
                 <div className="mt-4 flex gap-4 text-sm text-blue-100">
                   <span className="font-medium">Invoice # {invoice.invoiceNumber}</span>
                   <span>·</span>
@@ -483,8 +457,6 @@ export default function InvoicePage() {
 
               {/* Body */}
               <div className="px-7 py-6 space-y-5">
-
-                {/* Invoice To */}
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Invoice To</p>
                   <p className="text-xl font-black text-gray-800 mt-1">
@@ -492,7 +464,6 @@ export default function InvoicePage() {
                   </p>
                 </div>
 
-                {/* Items table */}
                 <div className="rounded-xl overflow-hidden border border-gray-100">
                   <table className="w-full text-sm">
                     <thead>
@@ -514,7 +485,6 @@ export default function InvoicePage() {
                           <td className="px-4 py-3 text-right font-semibold text-gray-800">{formatRp(item.price * item.qty)}</td>
                         </tr>
                       ))}
-                      {/* Padding rows */}
                       {invoice.items.length < 4 &&
                         Array.from({ length: 4 - invoice.items.length }).map((_, i) => (
                           <tr key={"pad-" + i} className={((invoice.items.length + i) % 2 === 0) ? "bg-white" : "bg-gray-50"}>
@@ -526,7 +496,6 @@ export default function InvoicePage() {
                     </tbody>
                   </table>
 
-                  {/* Totals row */}
                   <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 space-y-1.5">
                     <div className="flex justify-end gap-12 text-sm text-gray-500">
                       <span className="font-medium">Sub total</span>
@@ -537,7 +506,8 @@ export default function InvoicePage() {
                       <span>{invoice.discount > 0 ? "- " + formatRp(invoice.discount) : "-"}</span>
                     </div>
                     <div className="flex justify-end gap-8 mt-2">
-                      <span className="font-black text-base text-white px-4 py-1.5 rounded-lg" style={{ background: "linear-gradient(90deg, #1a73e8, #1565c0)" }}>
+                      <span className="font-black text-base text-white px-4 py-1.5 rounded-lg"
+                        style={{ background: "linear-gradient(90deg, #1a73e8, #1565c0)" }}>
                         Total
                       </span>
                       <span className="font-black text-base text-blue-800">{formatRp(total)}</span>
@@ -545,45 +515,32 @@ export default function InvoicePage() {
                   </div>
                 </div>
 
-                {/* Stamp + note row */}
                 <div className="flex items-end justify-between">
-                  {/* Note */}
                   <p className="text-sm italic text-gray-500 max-w-xs">{invoice.notes}</p>
-
-                  {/* Stamp / TTD */}
-                  <div className="relative">
-                    {invoice.isPaid && (
-                      <div className="absolute -top-2 -left-2 z-10">
-                        {stampUrl ? (
-                          <img src={stampUrl} alt="stamp" className="w-28 h-28 object-contain opacity-90" />
-                        ) : (
-                          /* Default PAID stamp visual */
-                          <div style={{
-                            width: 100, height: 100,
-                            border: "4px solid #e57373",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            transform: "rotate(-15deg)",
-                            opacity: 0.85,
-                          }}>
-                            <span style={{
-                              color: "#e57373",
-                              fontWeight: 900,
-                              fontSize: 22,
-                              letterSpacing: 2,
-                            }}>PAID</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  {invoice.isPaid && (
+                    <div>
+                      {stampUrl ? (
+                        <img src={stampUrl} alt="stamp" className="w-28 h-28 object-contain opacity-90" />
+                      ) : (
+                        <div style={{
+                          width: 100, height: 100,
+                          border: "4px solid #e57373",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transform: "rotate(-15deg)",
+                          opacity: 0.85,
+                        }}>
+                          <span style={{ color: "#e57373", fontWeight: 900, fontSize: 22, letterSpacing: 2 }}>PAID</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <hr className="border-gray-100" />
 
-                {/* Payment Info */}
                 {(invoice.phone || invoice.address) && (
                   <div>
                     <p className="text-base font-black text-gray-800 mb-2">Payment Info :</p>
@@ -605,14 +562,12 @@ export default function InvoicePage() {
                 )}
               </div>
 
-              {/* Footer band */}
               <div style={{ background: "linear-gradient(90deg, #1a73e8, #1565c0)" }}
                 className="px-7 py-3 text-center">
                 <p className="text-white text-xs opacity-75">Terima kasih atas kepercayaan Anda · FISIOTERAPI.KRI</p>
               </div>
             </div>
 
-            {/* Print hint */}
             <p className="no-print text-center text-xs text-gray-400 mt-3">
               Klik "Print / Save PDF" untuk menyimpan invoice sebagai file PDF
             </p>
