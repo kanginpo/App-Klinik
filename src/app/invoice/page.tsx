@@ -187,7 +187,7 @@ export default function InvoicePage() {
       <div className="invoice-page min-h-screen bg-gray-50 p-4 md:p-8">
 
         {/* ── Top toolbar ── */}
-        <div className="no-print max-w-4xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="no-print max-w-6xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">🧾 Pembuat Invoice</h1>
             <p className="text-sm text-gray-500">FISIOTERAPI.KRI – Invoice Lunas</p>
@@ -217,7 +217,7 @@ export default function InvoicePage() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-6">
 
           {/* ══════════════════════════════════════════
               LEFT – FORM INPUT
@@ -428,27 +428,29 @@ export default function InvoicePage() {
 
               {/* Header */}
               <div style={{ background: "linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)" }}
-                className="px-7 pt-7 pb-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                className="px-6 pt-6 pb-4">
+                <div className="flex items-start justify-between gap-3">
+                  {/* Logo + nama klinik */}
+                  <div className="flex items-center gap-2.5 min-w-0">
                     {logoUrl ? (
-                      <img src={logoUrl} alt="logo" className="h-12 w-12 object-contain bg-white rounded-full p-1" />
+                      <img src={logoUrl} alt="logo" className="h-10 w-10 flex-shrink-0 object-contain bg-white rounded-full p-1" />
                     ) : (
-                      <div className="h-12 w-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                        <span className="text-white font-black text-lg">F</span>
+                      <div className="h-10 w-10 flex-shrink-0 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <span className="text-white font-black text-base">F</span>
                       </div>
                     )}
-                    <div>
-                      <p className="text-white font-black text-lg leading-none tracking-wide">FISIOTERAPI.KRI</p>
+                    <div className="min-w-0">
+                      <p className="text-white font-black text-base leading-tight tracking-wide truncate">FISIOTERAPI.KRI</p>
                       <p className="text-blue-200 text-xs mt-0.5">Klinik Fisioterapi Profesional</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-white font-black text-2xl md:text-3xl tracking-widest">INVOICE LUNAS</p>
-                    <p className="text-blue-200 text-xs mt-1">#{invoice.invoiceNumber}</p>
+                  {/* INVOICE LUNAS badge */}
+                  <div className="flex-shrink-0 text-right">
+                    <p className="text-white font-black text-lg leading-tight tracking-wider whitespace-nowrap">INVOICE LUNAS</p>
+                    <p className="text-blue-200 text-xs mt-0.5">#{invoice.invoiceNumber}</p>
                   </div>
                 </div>
-                <div className="mt-4 flex gap-4 text-sm text-blue-100">
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-blue-100">
                   <span className="font-medium">Invoice # {invoice.invoiceNumber}</span>
                   <span>·</span>
                   <span>Date : {formatDateIndo(invoice.date)}</span>
