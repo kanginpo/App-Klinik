@@ -53,3 +53,29 @@ export interface ClinicStats {
   patientCount: number;
   appointmentCount: number;
 }
+// ─── Tambahkan ini ke src/types/index.ts ─────────────────────────────────────
+ 
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  price: number;
+  qty: number;
+}
+ 
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  date: string;
+  patientId: string;       // relasi ke Patient.id
+  patientName: string;     // snapshot nama saat invoice dibuat
+  phone: string;
+  address: string;
+  notes: string;
+  items: InvoiceItem[];
+  discount: number;
+  subtotal: number;
+  total: number;
+  isPaid: boolean;
+  createdAt: string;
+}
+ 
